@@ -376,6 +376,10 @@ class ElectrsApi implements AbstractBitcoinApi {
     return this.failoverRouter.$get<string>('/block/' + hash + '/header');
   }
 
+  $getAddressUtxo(address: string): Promise<string> {
+    return this.failoverRouter.$get<string>('/address/' + address + '/utxo');
+  }
+
   $getBlock(hash: string): Promise<IEsploraApi.Block> {
     return this.failoverRouter.$get<IEsploraApi.Block>('/block/' + hash);
   }

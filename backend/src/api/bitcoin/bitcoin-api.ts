@@ -129,6 +129,10 @@ class BitcoinApi implements AbstractBitcoinApi {
   $getBlockHeader(hash: string): Promise<string> {
     return this.bitcoindClient.getBlockHeader(hash, false);
   }
+  
+  $getAddressUtxo(address: string): Promise<String> {
+    throw new Error('Method getAddress not supported by the Bitcoin RPC API.');
+  }
 
   async $getBlock(hash: string): Promise<IEsploraApi.Block> {
     const foundBlock = blocks.getBlocks().find((block) => block.id === hash);
