@@ -138,7 +138,8 @@ class DatabaseMigration {
       await this.$executeQuery('ALTER TABLE blocks MODIFY `weight` integer unsigned NOT NULL DEFAULT "0"');
       await this.$executeQuery('ALTER TABLE blocks MODIFY `difficulty` double NOT NULL DEFAULT "0"');
       // We also fix the pools.id type so we need to drop/re-create the foreign key
-      await this.$executeQuery('ALTER TABLE blocks DROP FOREIGN KEY IF EXISTS `blocks_ibfk_1`');
+      // await this.$executeQuery('ALTER TABLE blocks DROP FOREIGN KEY IF EXISTS `blocks_ibfk_1`');
+      await this.$dropForeignKey('blocks', 'blocks_ibfk_1')
       await this.$executeQuery('ALTER TABLE pools MODIFY `id` smallint unsigned AUTO_INCREMENT');
       await this.$executeQuery('ALTER TABLE blocks MODIFY `pool_id` smallint unsigned NULL');
       await this.$executeQuery('ALTER TABLE blocks ADD FOREIGN KEY (`pool_id`) REFERENCES `pools` (`id`)');
@@ -336,7 +337,7 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 32 && isBitcoin == true) {
-      await this.$executeQuery('ALTER TABLE `blocks_summaries` ADD `template` JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_summaries` ADD `template` JSON '); // DEFAULT "[]"
       await this.updateToSchemaVersion(32);
     }
 
@@ -411,12 +412,13 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 45 && isBitcoin === true) {
-      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fresh_txs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fresh_txs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(45);
     }
 
     if (databaseSchemaVersion < 46) {
-      await this.$executeQuery(`ALTER TABLE blocks MODIFY blockTimestamp timestamp NOT NULL DEFAULT 0`);
+      // await this.$executeQuery(`ALTER TABLE blocks MODIFY blockTimestamp timestamp NOT NULL DEFAULT 0`);
+      await this.$executeQuery(`ALTER TABLE blocks MODIFY blockTimestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP`);
       await this.updateToSchemaVersion(46);
     }
 
@@ -437,7 +439,7 @@ class DatabaseMigration {
       await this.$executeQuery('ALTER TABLE `channels` ADD funding_ratio float unsigned DEFAULT NULL');
       await this.$executeQuery('ALTER TABLE `channels` ADD closed_by varchar(66) DEFAULT NULL');
       await this.$executeQuery('ALTER TABLE `channels` ADD single_funded tinyint(1) DEFAULT 0');
-      await this.$executeQuery('ALTER TABLE `channels` ADD outputs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `channels` ADD outputs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(48);
     }
 
@@ -518,7 +520,7 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 60 && isBitcoin === true) {
-      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD sigop_txs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD sigop_txs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(60);
     }
 
@@ -527,7 +529,7 @@ class DatabaseMigration {
       if (! await this.$checkIfTableExists('blocks_templates')) {
         await this.$executeQuery('CREATE TABLE blocks_templates AS SELECT id, template FROM blocks_summaries WHERE template != "[]"');
       }
-      await this.$executeQuery('ALTER TABLE blocks_templates MODIFY template JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE blocks_templates MODIFY template  JSON ');//DEFAULT"[]"
       await this.$executeQuery('ALTER TABLE blocks_templates ADD PRIMARY KEY (id)');
       await this.$executeQuery('ALTER TABLE blocks_summaries DROP COLUMN template');
       await this.updateToSchemaVersion(61);
@@ -540,7 +542,7 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 63 && isBitcoin === true) {
-      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fullrbf_txs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fullrbf_txs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(63);
     }
 
@@ -550,7 +552,7 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 65 && isBitcoin === true) {
-      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD accelerated_txs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD accelerated_txs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(65);
     }
 
@@ -566,7 +568,7 @@ class DatabaseMigration {
       await this.$executeQuery('ALTER TABLE `blocks_templates` ADD INDEX `version` (`version`)');
       await this.updateToSchemaVersion(67);
     }
-    
+
     if (databaseSchemaVersion < 68 && config.MEMPOOL.NETWORK === "liquid") {
       await this.$executeQuery('TRUNCATE TABLE elements_pegs');
       await this.$executeQuery('ALTER TABLE elements_pegs ADD PRIMARY KEY (txid, txindex);');
@@ -663,7 +665,7 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 76 && isBitcoin === true) {
-      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD prioritized_txs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD prioritized_txs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(76);
     }
 
@@ -690,14 +692,14 @@ class DatabaseMigration {
     }
 
     if (databaseSchemaVersion < 80) {
-      await this.$executeQuery('ALTER TABLE `blocks` ADD coinbase_addresses JSON DEFAULT NULL');
+      await this.$executeQuery('ALTER TABLE `blocks` ADD coinbase_addresses JSON ');//DEFAULT NULL
       await this.updateToSchemaVersion(80);
     }
 
     if (databaseSchemaVersion < 81 && isBitcoin === true) {
       await this.$executeQuery('ALTER TABLE `blocks_audits` ADD version INT NOT NULL DEFAULT 0');
       await this.$executeQuery('ALTER TABLE `blocks_audits` ADD INDEX `version` (`version`)');
-      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD unseen_txs JSON DEFAULT "[]"');
+      await this.$executeQuery('ALTER TABLE `blocks_audits` ADD unseen_txs JSON ');//DEFAULT "[]"
       await this.updateToSchemaVersion(81);
     }
 
@@ -760,7 +762,7 @@ class DatabaseMigration {
 
     // geo names indexes
     if (databaseSchemaVersion < 89 && isBitcoin === true) {
-      await this.$executeQuery('ALTER TABLE `geo_names` ADD INDEX `names` (`names`)');
+      await this.$executeQuery('ALTER TABLE `geo_names` ADD INDEX `names` (`names`(255))');
       await this.updateToSchemaVersion(89);
     }
 
@@ -817,7 +819,8 @@ class DatabaseMigration {
         await this.$executeQuery('ALTER TABLE blocks MODIFY `size` integer unsigned NOT NULL DEFAULT "0"');
         await this.$executeQuery('ALTER TABLE blocks MODIFY `weight` integer unsigned NOT NULL DEFAULT "0"');
         await this.$executeQuery('ALTER TABLE blocks MODIFY `difficulty` double NOT NULL DEFAULT "0"');
-        await this.$executeQuery('ALTER TABLE blocks DROP FOREIGN KEY IF EXISTS `blocks_ibfk_1`');
+        // await this.$executeQuery('ALTER TABLE blocks DROP FOREIGN KEY IF EXISTS `blocks_ibfk_1`');
+        await this.$dropForeignKey('blocks', 'blocks_ibfk_1')
         await this.$executeQuery('ALTER TABLE pools MODIFY `id` smallint unsigned AUTO_INCREMENT');
         await this.$executeQuery('ALTER TABLE blocks MODIFY `pool_id` smallint unsigned NULL');
         await this.$executeQuery('ALTER TABLE blocks ADD FOREIGN KEY (`pool_id`) REFERENCES `pools` (`id`)');
@@ -924,31 +927,31 @@ class DatabaseMigration {
         await this.$executeQuery(this.getCreateBlocksPricesTableQuery(), await this.$checkIfTableExists('blocks_prices'));
 
         // Version 32
-        await this.$executeQuery('ALTER TABLE `blocks_summaries` ADD `template` JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE `blocks_summaries` ADD `template` JSON ');//DEFAULT "[]"
 
         // Version 33
         await this.$executeQuery('ALTER TABLE `geo_names` CHANGE `type` `type` enum("city","country","division","continent","as_organization", "country_iso_code") NOT NULL');
 
         // Version 34
         await this.$executeQuery('ALTER TABLE `lightning_stats` ADD clearnet_tor_nodes int(11) NOT NULL DEFAULT "0"');
-    
+
         // Version 35
         await this.$executeQuery('DELETE from `lightning_stats` WHERE added > "2021-09-19"');
         await this.$executeQuery('ALTER TABLE `lightning_stats` ADD CONSTRAINT added_unique UNIQUE (added);');
 
         // Version 36
         await this.$executeQuery('ALTER TABLE `nodes` ADD status TINYINT NOT NULL DEFAULT "1"');
-    
+
         // Version 37
         await this.$executeQuery(this.getCreateLNNodesSocketsTableQuery(), await this.$checkIfTableExists('nodes_sockets'));
-        
+
         // Version 38
         await this.$executeQuery(`TRUNCATE lightning_stats`);
         await this.$executeQuery(`TRUNCATE node_stats`);
         await this.$executeQuery('ALTER TABLE `lightning_stats` CHANGE `added` `added` timestamp NULL');
         await this.$executeQuery('ALTER TABLE `node_stats` CHANGE `added` `added` timestamp NULL');
         await this.updateToSchemaVersion(38);
-      
+
         // Version 39
         await this.$executeQuery('ALTER TABLE `nodes` ADD alias_search TEXT NULL DEFAULT NULL AFTER `alias`');
         await this.$executeQuery('ALTER TABLE nodes ADD FULLTEXT(alias_search)');
@@ -963,7 +966,7 @@ class DatabaseMigration {
 
         // Version 42
         await this.$executeQuery('ALTER TABLE `channels` ADD closing_resolved tinyint(1) DEFAULT 0');
-      
+
         // Version 43
         await this.$executeQuery(this.getCreateLNNodeRecordsTableQuery(), await this.$checkIfTableExists('nodes_records'));
 
@@ -971,8 +974,8 @@ class DatabaseMigration {
         await this.$executeQuery('UPDATE blocks_summaries SET template = NULL');
 
         // Version 45
-        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fresh_txs JSON DEFAULT "[]"');
-    
+        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fresh_txs JSON ');//DEFAULT "[]"
+
         // Version 48
         await this.$executeQuery('ALTER TABLE `channels` ADD source_checked tinyint(1) DEFAULT 0');
         await this.$executeQuery('ALTER TABLE `channels` ADD closing_fee bigint(20) unsigned DEFAULT 0');
@@ -983,34 +986,34 @@ class DatabaseMigration {
         await this.$executeQuery('ALTER TABLE `channels` ADD funding_ratio float unsigned DEFAULT NULL');
         await this.$executeQuery('ALTER TABLE `channels` ADD closed_by varchar(66) DEFAULT NULL');
         await this.$executeQuery('ALTER TABLE `channels` ADD single_funded tinyint(1) DEFAULT 0');
-        await this.$executeQuery('ALTER TABLE `channels` ADD outputs JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE `channels` ADD outputs JSON ');//DEFAULT "[]"
 
         // Version 57
         await this.$executeQuery(`ALTER TABLE nodes MODIFY updated_at datetime NULL`);
 
         // Version 60
-        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD sigop_txs JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD sigop_txs JSON ');//DEFAULT "[]"
 
         // Version 61
         if (! await this.$checkIfTableExists('blocks_templates')) {
           await this.$executeQuery('CREATE TABLE blocks_templates AS SELECT id, template FROM blocks_summaries WHERE template != "[]"');
         }
-        await this.$executeQuery('ALTER TABLE blocks_templates MODIFY template JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE blocks_templates MODIFY template JSON ');//DEFAULT "[]"
         await this.$executeQuery('ALTER TABLE blocks_templates ADD PRIMARY KEY (id)');
         await this.$executeQuery('ALTER TABLE blocks_summaries DROP COLUMN template');
 
         // Version 62
         await this.$executeQuery('ALTER TABLE `blocks_audits` ADD expected_fees BIGINT UNSIGNED DEFAULT NULL');
         await this.$executeQuery('ALTER TABLE `blocks_audits` ADD expected_weight BIGINT UNSIGNED DEFAULT NULL');
-      
+
         // Version 63
-        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fullrbf_txs JSON DEFAULT "[]"');
-    
+        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD fullrbf_txs JSON ');//DEFAULT "[]"
+
         // Version 64
         await this.$executeQuery('ALTER TABLE `nodes` ADD features text NULL');
-    
+
         // Version 65
-        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD accelerated_txs JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD accelerated_txs JSON ');//DEFAULT "[]"
 
         // Version 67
         await this.$executeQuery('ALTER TABLE `blocks_summaries` ADD version INT NOT NULL DEFAULT 0');
@@ -1019,12 +1022,12 @@ class DatabaseMigration {
         await this.$executeQuery('ALTER TABLE `blocks_templates` ADD INDEX `version` (`version`)');
 
         // Version 76
-        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD prioritized_txs JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD prioritized_txs JSON ');//DEFAULT "[]"
 
         // Version 81
         await this.$executeQuery('ALTER TABLE `blocks_audits` ADD version INT NOT NULL DEFAULT 0');
         await this.$executeQuery('ALTER TABLE `blocks_audits` ADD INDEX `version` (`version`)');
-        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD unseen_txs JSON DEFAULT "[]"');
+        await this.$executeQuery('ALTER TABLE `blocks_audits` ADD unseen_txs JSON ');//DEFAULT "[]"
 
         // Version 83
         await this.$executeQuery('ALTER TABLE `blocks` ADD first_seen datetime(6) DEFAULT NULL');
@@ -1044,8 +1047,8 @@ class DatabaseMigration {
             ADD INDEX \`closing_reason\` (\`closing_reason\`),
             ADD INDEX \`closing_resolved\` (\`closing_resolved\`)
         `);
-        
-        // Version 86        
+
+        // Version 86
         await this.$executeQuery(`
           ALTER TABLE \`nodes\`
             ADD INDEX \`status\` (\`status\`),
@@ -1058,20 +1061,20 @@ class DatabaseMigration {
         // Version 87
         await this.$executeQuery('ALTER TABLE `nodes_sockets` ADD INDEX `type` (`type`)');
         await this.updateToSchemaVersion(87);
-        
+
         // Version 88
         await this.$executeQuery('ALTER TABLE `lightning_stats` ADD INDEX `added` (`added`)');
-    
+
         // Version 89
         await this.$executeQuery('ALTER TABLE `geo_names` ADD INDEX `names` (`names`)');
-    
+
         // Version 90
         await this.$executeQuery('ALTER TABLE `hashrates` ADD INDEX `type` (`type`)');
 
         // Version 91
         await this.$executeQuery('ALTER TABLE `blocks_audits` ADD INDEX `time` (`time`)');
       }
-      
+
       if (config.MEMPOOL.NETWORK !== 'liquid') {
         // Apply all the liquid specific migrations to all other networks
         // Version 68
@@ -1093,7 +1096,7 @@ class DatabaseMigration {
             ADD INDEX \`bitcoinaddress\` (\`bitcoinaddress\`),
             ADD INDEX \`bitcointxid\` (\`bitcointxid\`)
         `);
-    
+
         // Version 93
         await this.$executeQuery(`
           ALTER TABLE \`federation_txos\`
@@ -1137,6 +1140,12 @@ class DatabaseMigration {
     }
   }
 
+  private async $dropForeignKey(table: string, constrantName: string) {
+    if (await this.$checkIfForeignExists(table, constrantName)) {
+      await this.$executeQuery('ALTER TABLE blocks DROP FOREIGN KEY `blocks_ibfk_1`');
+    }
+  }
+
   /**
    * Special case here for the `statistics` table - It appeared that somehow some dbs already had the `added` field indexed
    * while it does not appear in previous schemas. The mariadb command "CREATE INDEX IF NOT EXISTS" is not supported on
@@ -1177,6 +1186,12 @@ class DatabaseMigration {
       logger.debug('MIGRATIONS: Execute query:\n' + query);
     }
     return DB.query({ sql: query, timeout: this.queryTimeout });
+  }
+
+  private async $checkIfForeignExists(table: string, constrantName: string): Promise<boolean> {
+    const query = `SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE WHERE CONSTRAINT_NAME = '${constrantName}' AND TABLE_NAME = '${table}'`;
+    const [rows] = await DB.query({ sql: query, timeout: this.queryTimeout });
+    return rows[0]['COUNT(*)'] === 1;
   }
 
   /**
@@ -1403,7 +1418,7 @@ class DatabaseMigration {
       pegtxid varchar(65) NOT NULL,
       pegindex int(11) NOT NULL,
       pegblocktime int(11) unsigned NOT NULL,
-      PRIMARY KEY (txid, txindex), 
+      PRIMARY KEY (txid, txindex),
       FOREIGN KEY (bitcoinaddress) REFERENCES federation_addresses (bitcoinaddress)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;`;
   }
@@ -1644,7 +1659,7 @@ class DatabaseMigration {
     return `CREATE TABLE IF NOT EXISTS cpfp_clusters (
       root varchar(65) NOT NULL,
       height int(10) NOT NULL,
-      txs JSON DEFAULT NULL,
+      txs JSON ,
       fee_rate double unsigned NOT NULL,
       PRIMARY KEY (root)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;`;

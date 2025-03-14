@@ -198,9 +198,9 @@ class BlocksRepository {
 
   /**
    * Save newly indexed data from core coinstatsindex
-   * 
-   * @param utxoSetSize 
-   * @param totalInputAmt 
+   *
+   * @param utxoSetSize
+   * @param totalInputAmt
    */
   public async $updateCoinStatsIndexData(blockHash: string, utxoSetSize: number,
     totalInputAmt: number
@@ -226,9 +226,9 @@ class BlocksRepository {
   /**
    * Update missing fee amounts fields
    *
-   * @param blockHash 
-   * @param feeAmtPercentiles 
-   * @param medianFeeAmt 
+   * @param blockHash
+   * @param feeAmtPercentiles
+   * @param medianFeeAmt
    */
   public async $updateFeeAmounts(blockHash: string, feeAmtPercentiles, medianFeeAmt) : Promise<void> {
     try {
@@ -330,7 +330,7 @@ class BlocksRepository {
 
     const params: any[] = [];
     let query = `SELECT count(height) as blockCount
-      FROM blocks`;
+                 FROM blocks`;
 
     if (poolId) {
       query += ` WHERE pool_id = ?`;
@@ -365,9 +365,9 @@ class BlocksRepository {
   public async $blockCountBetweenTimestamp(poolId: number | null, from: number, to: number): Promise<number> {
     const params: any[] = [];
     let query = `SELECT
-      count(height) as blockCount,
-      max(height) as lastBlockHeight
-      FROM blocks`;
+                   count(height) as blockCount,
+                   max(height) as lastBlockHeight
+                 FROM blocks`;
 
     if (poolId) {
       query += ` WHERE pool_id = ?`;
@@ -951,9 +951,9 @@ class BlocksRepository {
 
   /**
    * Save indexed median fee to avoid recomputing it later
-   * 
-   * @param id 
-   * @param feePercentiles 
+   *
+   * @param id
+   * @param feePercentiles
    */
   public async $saveFeePercentilesForBlockId(id: string, feePercentiles: number[]): Promise<void> {
     try {
@@ -970,15 +970,15 @@ class BlocksRepository {
 
   /**
    * Save indexed effective fee statistics
-   * 
-   * @param id 
-   * @param feeStats 
+   *
+   * @param id
+   * @param feeStats
    */
   public async $saveEffectiveFeeStats(id: string, feeStats: EffectiveFeeStats): Promise<void> {
     try {
       await DB.query(`
-        UPDATE blocks SET median_fee = ?, fee_span = ?
-        WHERE hash = ?`,
+          UPDATE blocks SET median_fee = ?, fee_span = ?
+          WHERE hash = ?`,
         [feeStats.medianFee, JSON.stringify(feeStats.feeRange), id]
       );
     } catch (e) {
@@ -989,7 +989,7 @@ class BlocksRepository {
 
   /**
    * Save coinbase addresses
-   * 
+   *
    * @param id
    * @param addresses
    */
@@ -1008,7 +1008,7 @@ class BlocksRepository {
 
   /**
    * Save pool
-   * 
+   *
    * @param id
    * @param poolId
    */
@@ -1027,8 +1027,8 @@ class BlocksRepository {
 
   /**
    * Save block first seen time
-   * 
-   * @param id 
+   *
+   * @param id
    */
   public async $saveFirstSeenTime(id: string, firstSeen: number): Promise<void> {
     try {
@@ -1046,8 +1046,8 @@ class BlocksRepository {
   /**
    * Convert a mysql row block into a BlockExtended. Note that you
    * must provide the correct field into dbBlk object param
-   * 
-   * @param dbBlk 
+   *
+   * @param dbBlk
    */
   private async formatDbBlockIntoExtendedBlock(dbBlk: DatabaseBlock): Promise<BlockExtended> {
     const blk: Partial<BlockExtended> = {};
@@ -1067,11 +1067,15 @@ class BlocksRepository {
     blk.weight = dbBlk.weight;
     blk.previousblockhash = dbBlk.previousblockhash;
     blk.mediantime = dbBlk.mediantime;
-    
+
     // BlockExtension
     extras.totalFees = dbBlk.totalFees;
     extras.medianFee = dbBlk.medianFee;
-    extras.feeRange = JSON.parse(dbBlk.feeRange);
+    var feeRange = dbBlk.feeRange ?? [];
+    if (feeRange.indexOf("[") < 0) {
+      feeRange = "[" + feeRange + "]"
+    }
+    extras.feeRange = JSON.parse(feeRange);
     extras.reward = dbBlk.reward;
     extras.pool = {
       id: dbBlk.poolId,
@@ -1083,7 +1087,11 @@ class BlocksRepository {
     extras.avgFeeRate = dbBlk.avgFeeRate;
     extras.coinbaseRaw = dbBlk.coinbaseRaw;
     extras.coinbaseAddress = dbBlk.coinbaseAddress;
-    extras.coinbaseAddresses = dbBlk.coinbaseAddresses ? JSON.parse(dbBlk.coinbaseAddresses) : [];
+    var coinbaseAddresses = dbBlk.coinbaseAddresses ?? [];
+    if (coinbaseAddresses.indexOf("[") < 0) {
+      coinbaseAddresses = "[\"" + coinbaseAddresses + "\"]"
+    }
+    extras.coinbaseAddresses = coinbaseAddresses ? JSON.parse(coinbaseAddresses) : []; //dbBlk.coinbaseAddresses ? JSON.parse(dbBlk.coinbaseAddresses) : [];
     extras.coinbaseSignature = dbBlk.coinbaseSignature;
     extras.coinbaseSignatureAscii = dbBlk.coinbaseSignatureAscii;
     extras.avgTxSize = dbBlk.avgTxSize;
@@ -1091,7 +1099,14 @@ class BlocksRepository {
     extras.totalOutputs = dbBlk.totalOutputs;
     extras.totalOutputAmt = dbBlk.totalOutputAmt;
     extras.medianFeeAmt = dbBlk.medianFeeAmt;
-    extras.feePercentiles = JSON.parse(dbBlk.feePercentiles);
+    var feePercentiles = dbBlk.feePercentiles??[];
+    if (feePercentiles == "null") {
+      feePercentiles = "[]";
+    }
+    if (feePercentiles.indexOf("[") < 0) {
+      feePercentiles = "[" + feePercentiles + "]"
+    }
+    extras.feePercentiles = JSON.parse(feePercentiles)??[];
     extras.segwitTotalTxs = dbBlk.segwitTotalTxs;
     extras.segwitTotalSize = dbBlk.segwitTotalSize;
     extras.segwitTotalWeight = dbBlk.segwitTotalWeight;
